@@ -1,0 +1,82 @@
+﻿
+
+-- Tính tổng hoa hồng theo thứ tự giảm dần
+-- của từng sản phẩm theo tên sản phẩm.
+Select nonempty ([Measures].[Commision]) on columns,
+ nonempty (order ([Dim Product].[Product Name].[Product Name],
+ [Measures].[Commision],desc)) on rows
+From [Travel Insurance Cube];
+
+
+-- Tính tổng hoa hồng của 5 sản phẩm có hoa hồng cao nhất
+Select nonempty ([Measures].[Commision]) on columns,
+nonempty (topcount ([Dim Product].[Product Name].[Product Name]
+,5,[Measures].[Commision])) on rows
+From [Travel Insurance Cube];
+
+
+
+-- Tính tổng hoa hồng của sản phẩm nhất định (Ex: Value Plan)
+Select nonempty ([Measures].[Commision]) on columns
+From [Travel Insurance Cube]
+Where [Dim Product].[Product Name].[Product Name].[Value Plan];
+
+
+
+
+-- Tính tổng thời gian khách du lịch đã dừng chân tại Việt Nam
+Select [Measures].[Duration] on columns,
+ [Dim Destination].[Destination].[Destination].[Viet Nam] on rows
+From [Travel Insurance Cube];
+
+Select [Measures].[Duration] on columns
+From [Travel Insurance Cube]
+Where [Dim Destination].[Destination].[Destination].[Viet Nam];
+
+
+
+--Tính thời gian từng loại đại lý cung cấp 
+-- bảo hiểm cho khách hàng ở từng quốc gia
+Select 
+nonempty ([Dim Agency].[Agency Type].[Agency Type]) on columns,
+nonempty ([Dim Destination].[Destination].[Destination]) on rows
+From [Travel Insurance Cube]
+Where [Measures].[Duration];
+
+
+
+-- Tính tổng thời gian các loại đại lý đã 
+-- cung cấp từng sản phẩm bảo hiểm
+Select
+nonempty ([Dim Product].[Product Name].[Product Name]) on rows,
+nonempty ([Dim Agency].[Agency Type].[Agency Type]) on columns
+From [Travel Insurance Cube]
+Where [Measures].[Duration];
+
+
+-- Tổng số địa điểm du lịch có thời gian và hoa hồng bảo hiểm (lớn hơn 0) mà từng loại đại lý đã cung cấp
+With
+Member [Measures].[Duration Count]  as
+    Sum
+    ([Dim Destination].[Destination].[Destination],
+		Iif  
+		([Measures].[Duration] > 0, 1, 0)) 
+Member [Measures].[Commision Count] as
+    Sum
+    (NonEmpty(
+        [Dim Destination].[Destination].[Destination],
+		[Measures].[Commision]),
+		Iif
+		([Measures].[Commision]  > 0, 1, 0)) 
+Select 
+  { [Measures].[Duration Count],
+    [Measures].[Commision Count] } on columns,
+Nonempty ([Dim Agency].[Agency Type].[Agency Type]) on rows
+From [Travel Insurance Cube];
+
+
+-- Tổng hoa hồng mà các đại lý nhận được 
+-- và thời gian bảo hiểm họ cung cấp
+Select {[Measures].[Commision],[Duration]} on columns,
+nonempty ([Dim Agency].[Agency].[Agency]) on rows
+From [Travel Insurance Cube]
